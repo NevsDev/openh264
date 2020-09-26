@@ -1,0 +1,14 @@
+*.so
+*.dynlib
+*.dll
+*.h264
+!src/openh264_bin/*
+
+
+examples/**
+!examples/**.nim
+!examples/**.nims
+
+tests/**
+!tests/**.nim
+!tests/**.nims
