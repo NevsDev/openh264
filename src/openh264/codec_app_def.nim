@@ -151,60 +151,62 @@ type
     DECODER_OPTION_NUM_OF_THREADS                               ## number of decoding threads. The maximum thread count is equal or less than lesser of (cpu core counts and 16).
 
 
-## *
-##  @brief Enumerate the type of error concealment methods
-##
 type
   ERROR_CON_IDC* {.size: sizeof(cint).} = enum
-    ERROR_CON_DISABLE = 0, ERROR_CON_FRAME_COPY, ERROR_CON_SLICE_COPY,
-    ERROR_CON_FRAME_COPY_CROSS_IDR, ERROR_CON_SLICE_COPY_CROSS_IDR,
+    ## Enumerate the type of error concealment methods
+    ERROR_CON_DISABLE = 0, 
+    ERROR_CON_FRAME_COPY, 
+    ERROR_CON_SLICE_COPY,
+    ERROR_CON_FRAME_COPY_CROSS_IDR, 
+    ERROR_CON_SLICE_COPY_CROSS_IDR,
     ERROR_CON_SLICE_COPY_CROSS_IDR_FREEZE_RES_CHANGE,
     ERROR_CON_SLICE_MV_COPY_CROSS_IDR,
     ERROR_CON_SLICE_MV_COPY_CROSS_IDR_FREEZE_RES_CHANGE
 
 
-## *
-##  @brief Feedback that whether or not have VCL NAL in current AU
-##
 type
   FEEDBACK_VCL_NAL_IN_AU* {.size: sizeof(cint).} = enum
-    FEEDBACK_NON_VCL_NAL = 0, FEEDBACK_VCL_NAL, FEEDBACK_UNKNOWN_NAL
+    ## Feedback that whether or not have VCL NAL in current AU
+    FEEDBACK_NON_VCL_NAL = 0, 
+    FEEDBACK_VCL_NAL, 
+    FEEDBACK_UNKNOWN_NAL
 
 
-## *
-##  @brief Type of layer being encoded
-##
 type
   LAYER_TYPE* {.size: sizeof(cint).} = enum
-    NON_VIDEO_CODING_LAYER = 0, VIDEO_CODING_LAYER = 1
+    ## Type of layer being encoded
+    NON_VIDEO_CODING_LAYER = 0, 
+    VIDEO_CODING_LAYER = 1
 
 
-## *
-##  @brief Spatial layer num
-##
 type
   LAYER_NUM* {.size: sizeof(cint).} = enum
-    SPATIAL_LAYER_0 = 0, SPATIAL_LAYER_1 = 1, SPATIAL_LAYER_2 = 2, SPATIAL_LAYER_3 = 3,
+    ## Spatial layer num
+    SPATIAL_LAYER_0 = 0, 
+    SPATIAL_LAYER_1 = 1, 
+    SPATIAL_LAYER_2 = 2, 
+    SPATIAL_LAYER_3 = 3,
     SPATIAL_LAYER_ALL = 4
 
 
-## *
-##  @brief Enumerate the type of video bitstream which is provided to decoder
-##
 type
   VIDEO_BITSTREAM_TYPE* {.size: sizeof(cint).} = enum
-    VIDEO_BITSTREAM_AVC = 0, VIDEO_BITSTREAM_SVC = 1
+    ## Enumerate the type of video bitstream which is provided to decoder
+    VIDEO_BITSTREAM_AVC = 0, 
+    VIDEO_BITSTREAM_SVC = 1
 
 const
   VIDEO_BITSTREAM_DEFAULT* = VIDEO_BITSTREAM_SVC
 
-## *
-##  @brief Enumerate the type of key frame request
-##
 type
   KEY_FRAME_REQUEST_TYPE* {.size: sizeof(cint).} = enum
-    NO_RECOVERY_REQUSET = 0, LTR_RECOVERY_REQUEST = 1, IDR_RECOVERY_REQUEST = 2,
-    NO_LTR_MARKING_FEEDBACK = 3, LTR_MARKING_SUCCESS = 4, LTR_MARKING_FAILED = 5
+    ## Enumerate the type of key frame request
+    NO_RECOVERY_REQUSET = 0, 
+    LTR_RECOVERY_REQUEST = 1, 
+    IDR_RECOVERY_REQUEST = 2,
+    NO_LTR_MARKING_FEEDBACK = 3, 
+    LTR_MARKING_SUCCESS = 4, 
+    LTR_MARKING_FAILED = 5
 
 
 ## *
@@ -472,30 +474,26 @@ type
     bIsLosslessLink*: bool                    ##  LTR advanced setting
 
 
-##  @brief Define a new struct to show the property of video bitstream.
 type
   SVideoProperty* {.bycopy.} = object
-    size*: cuint               ## size of the struct
-    eVideoBsType*: VIDEO_BITSTREAM_TYPE ## video stream type (AVC/SVC)
+    ## Define a new struct to show the property of video bitstream.
+    size*: cuint                            ## size of the struct
+    eVideoBsType*: VIDEO_BITSTREAM_TYPE     ## video stream type (AVC/SVC)
 
 
-##  @brief SVC Decoding Parameters, reserved here and potential applicable in the future
-type
   SDecodingParam* {.bycopy.} = object
-    pFileNameRestructed*: cstring   ## file name of reconstructed frame used for PSNR calculation based debug
-    uiCpuLoad*: cuint               ## CPU load
-    uiTargetDqLayer*: cuchar        ## setting target dq layer id
-    eEcActiveIdc*: ERROR_CON_IDC    ## whether active error concealment feature in decoder
-    bParseOnly*: bool               ## decoder for parse only, no reconstruction. When it is true, SPS/PPS size should not exceed SPS_PPS_BS_SIZE (128). Otherwise, it will return error info
-    sVideoProperty*: SVideoProperty ## video stream property
+    ## SVC Decoding Parameters, reserved here and potential applicable in the future
+    pFileNameRestructed*: cstring           ## file name of reconstructed frame used for PSNR calculation based debug
+    uiCpuLoad*: cuint                       ## CPU load
+    uiTargetDqLayer*: cuchar                ## setting target dq layer id
+    eEcActiveIdc*: ERROR_CON_IDC            ## whether active error concealment feature in decoder
+    bParseOnly*: bool                       ## decoder for parse only, no reconstruction. When it is true, SPS/PPS size should not exceed SPS_PPS_BS_SIZE (128). Otherwise, it will return error info
+    sVideoProperty*: SVideoProperty         ## video stream property
 
   PDecodingParam* = ptr SDecodingParam
 
-## *
-##  @brief Bitstream inforamtion of a layer being encoded
-##
-type
   SLayerBSInfo* {.bycopy.} = object
+    ## Bitstream inforamtion of a layer being encoded
     uiTemporalId*: cuchar
     uiSpatialId*: cuchar
     uiQualityId*: cuchar
@@ -511,9 +509,9 @@ type
 
   PLayerBSInfo* = ptr SLayerBSInfo
 
-##  @brief Frame bit stream info
 type
   SFrameBSInfo* {.bycopy.} = object
+    ## Frame bit stream info
     iLayerNum*: cint
     sLayerInfo*: array[MAX_LAYER_NUM_OF_FRAME, SLayerBSInfo]
     eFrameType*: EVideoFrameType
@@ -522,9 +520,9 @@ type
 
   PFrameBSInfo* = ptr SFrameBSInfo
 
-##   @brief Structure for source picture
 type
   SSourcePicture* {.bycopy.} = object
+    ## Structure for source picture
     iColorFormat*: EVideoFormatType   ## color space type
     iStride*: array[4, cint]          ## stride for each plane pData
     pData*: array[4, pointer]         ## plane pData

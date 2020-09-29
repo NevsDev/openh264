@@ -34,69 +34,63 @@
 ##  @file  codec_def.h
 ##
 ## *
-##  @brief Enumerate the type of video format
+##  Enumerate the type of video format
 ##
 
 
 type
   EVideoFormatType* {.size: sizeof(cint).} = enum
-    ## /< rgb color formats
+    ## rgb color formats
     videoFormatRGB = 1,                                               
     videoFormatRGBA = 2, videoFormatRGB555 = 3, videoFormatRGB565 = 4,
-    ## /< yuv color formats
+    ## yuv color formats
     videoFormatBGR = 5, videoFormatBGRA = 6, videoFormatABGR = 7, videoFormatARGB = 8, videoFormatYUY2 = 20, 
-    ## /< the same as IYUV
+    ## the same as IYUV
     videoFormatYVYU = 21, videoFormatUYVY = 22, videoFormatI420 = 23, 
-    ## /< only used in SVC decoder testbed
+    ## only used in SVC decoder testbed
     videoFormatYV12 = 24, videoFormatInternal = 25,                   
-    ## /< new format for output by DXVA decoding
+    ## new format for output by DXVA decoding
     videoFormatNV12 = 26,                                             
     videoFormatVFlip = 0x80000000
 
 
-## *
-##  @brief Enumerate  video frame type
-##
+##  Enumerate  video frame type
 type
   EVideoFrameType* {.size: sizeof(cint).} = enum
-    videoFrameTypeInvalid,    ## /< encoder not ready or parameters are invalidate
-    videoFrameTypeIDR,        ## /< IDR frame in H.264
-    videoFrameTypeI,          ## /< I frame type
-    videoFrameTypeP,          ## /< P frame type
-    videoFrameTypeSkip,       ## /< skip the frame based encoder kernel
-    videoFrameTypeIPMixed     ## /< a frame where I and P slices are mixing, not supported yet
+    videoFrameTypeInvalid,    ## encoder not ready or parameters are invalidate
+    videoFrameTypeIDR,        ## IDR frame in H.264
+    videoFrameTypeI,          ## I frame type
+    videoFrameTypeP,          ## P frame type
+    videoFrameTypeSkip,       ## skip the frame based encoder kernel
+    videoFrameTypeIPMixed     ## a frame where I and P slices are mixing, not supported yet
 
 
-## *
-##  @brief Enumerate  return type
-##
+##  Enumerate  return type
 type
   CM_RETURN* {.size: sizeof(cint).} = enum
-    cmResultSuccess,                    ## /< successful
-    cmInitParaError,                    ## /< parameters are invalid
-    cmUnknownReason, cmMallocMemeError, ## /< malloc a memory error
-    cmInitExpected,                     ## /< initial action is expected
+    cmResultSuccess,                    ## successful
+    cmInitParaError,                    ## parameters are invalid
+    cmUnknownReason, cmMallocMemeError, ## malloc a memory error
+    cmInitExpected,                     ## initial action is expected
     cmUnsupportedData
 
 
-## *
-##  @brief Enumulate the nal unit type
-##
+##  Enumulate the nal unit type
 type
   ENalUnitType* {.size: sizeof(cint).} = enum
-    ## /< ref_idc != 0
+    ## ref_idc != 0
     NAL_UNKNOWN = 0, NAL_SLICE = 1, NAL_SLICE_DPA = 2, NAL_SLICE_DPB = 3, NAL_SLICE_DPC = 4, NAL_SLICE_IDR = 5, 
-    ## /< ref_idc == 0
+    ## ref_idc == 0
     NAL_SEI = 6,                
     NAL_SPS = 7, NAL_PPS = 8
 
 
-## *
-##  @brief NRI: eNalRefIdc
-##
+## NRI: eNalRefIdc
 type
   ENalPriority* {.size: sizeof(cint).} = enum
-    NAL_PRIORITY_DISPOSABLE = 0, NAL_PRIORITY_LOW = 1, NAL_PRIORITY_HIGH = 2,
+    NAL_PRIORITY_DISPOSABLE = 0, 
+    NAL_PRIORITY_LOW = 1, 
+    NAL_PRIORITY_HIGH = 2,
     NAL_PRIORITY_HIGHEST = 3
 
 
@@ -111,9 +105,7 @@ const
   FRAME_NUM_PARAM_SET* = (-1)
   FRAME_NUM_IDR* = 0
 
-## *
-##  @brief eDeblockingIdc
-##
+##  eDeblockingIdc
 const
   DEBLOCKING_IDC_0* = 0
   DEBLOCKING_IDC_1* = 1
@@ -122,87 +114,101 @@ const
   DEBLOCKING_OFFSET* = (6)
   DEBLOCKING_OFFSET_MINUS* = (-6)
 
-##  Error Tools definition
 type
-  ERR_TOOL* = cushort
+  ERR_TOOL* = cushort           ##  Error Tools definition
 
-## *
-##  @brief to do
-##
 const
-  ET_NONE* = 0x00000000         ## /< NONE Error Tools
-  ET_IP_SCALE* = 0x00000001     ## /< IP Scalable
-  ET_FMO* = 0x00000002          ## /< Flexible Macroblock Ordering
-  ET_IR_R1* = 0x00000004        ## /< Intra Refresh in predifined 2% MB
-  ET_IR_R2* = 0x00000008        ## /< Intra Refresh in predifined 5% MB
-  ET_IR_R3* = 0x00000010        ## /< Intra Refresh in predifined 10% MB
-  ET_FEC_HALF* = 0x00000020     ## /< Forward Error Correction in 50% redundency mode
-  ET_FEC_FULL* = 0x00000040     ## /< Forward Error Correction in 100% redundency mode
+  ET_NONE* = 0x00000000         ## NONE Error Tools
+  ET_IP_SCALE* = 0x00000001     ## IP Scalable
+  ET_FMO* = 0x00000002          ## Flexible Macroblock Ordering
+  ET_IR_R1* = 0x00000004        ## Intra Refresh in predifined 2% MB
+  ET_IR_R2* = 0x00000008        ## Intra Refresh in predifined 5% MB
+  ET_IR_R3* = 0x00000010        ## Intra Refresh in predifined 10% MB
+  ET_FEC_HALF* = 0x00000020     ## Forward Error Correction in 50% redundency mode
+  ET_FEC_FULL* = 0x00000040     ## Forward Error Correction in 100% redundency mode
   ET_RFS* = 0x00000080
 
-## *
-##  @brief Information of coded Slice(=NAL)(s)
-##
 type
   SliceInfo* {.bycopy.} = object
-    pBufferOfSlices*: ptr cuchar ## /< base buffer of coded slice(s)
-    iCodedSliceCount*: cint    ## /< number of coded slices
-    pLengthOfSlices*: ptr cuint ## /< array of slices length accordingly by number of slice
-    iFecType*: cint            ## /< FEC type[0, 50%FEC, 100%FEC]
-    uiSliceIdx*: cuchar        ## /< index of slice in frame [FMO: 0,..,uiSliceCount-1; No FMO: 0]
-    uiSliceCount*: cuchar      ## /< count number of slice in frame [FMO: 2-8; No FMO: 1]
-    iFrameIndex*: char         ## /< index of frame[-1, .., idr_interval-1]
-    uiNalRefIdc*: cuchar       ## /< NRI, priority level of slice(NAL)
-    uiNalType*: cuchar         ## /< NAL type
-    uiContainingFinalNal*: cuchar ## /< whether final NAL is involved in buffer of coded slices, flag used in Pause feature in T27
+    ## Information of coded Slice(=NAL)(s)
+    pBufferOfSlices*: ptr cuchar  ## base buffer of coded slice(s)
+    iCodedSliceCount*: cint       ## number of coded slices
+    pLengthOfSlices*: ptr cuint   ## array of slices length accordingly by number of slice
+    iFecType*: cint               ## FEC type[0, 50%FEC, 100%FEC]
+    uiSliceIdx*: cuchar           ## index of slice in frame [FMO: 0,..,uiSliceCount-1; No FMO: 0]
+    uiSliceCount*: cuchar         ## count number of slice in frame [FMO: 2-8; No FMO: 1]
+    iFrameIndex*: char            ## index of frame[-1, .., idr_interval-1]
+    uiNalRefIdc*: cuchar          ## NRI, priority level of slice(NAL)
+    uiNalType*: cuchar            ## NAL type
+    uiContainingFinalNal*: cuchar ## whether final NAL is involved in buffer of coded slices, flag used in Pause feature in T27
 
   PSliceInfo* = ptr SliceInfo
 
-## *
-##  @brief thresholds of the initial, maximal and minimal rate
-##
 type
   SRateThresholds* {.bycopy.} = object
-    iWidth*: cint              ## /< frame width
-    iHeight*: cint             ## /< frame height
-    iThresholdOfInitRate*: cint ## /< threshold of initial rate
-    iThresholdOfMaxRate*: cint ## /< threshold of maximal rate
-    iThresholdOfMinRate*: cint ## /< threshold of minimal rate
-    iMinThresholdFrameRate*: cint ## /< min frame rate min
-    iSkipFrameRate*: cint      ## /< skip to frame rate min
-    iSkipFrameStep*: cint      ## /< how many frames to skip
+    ## thresholds of the initial, maximal and minimal rate
+    iWidth*: cint                 ## frame width
+    iHeight*: cint                ## frame height
+    iThresholdOfInitRate*: cint   ## threshold of initial rate
+    iThresholdOfMaxRate*: cint    ## threshold of maximal rate
+    iThresholdOfMinRate*: cint    ## threshold of minimal rate
+    iMinThresholdFrameRate*: cint ## min frame rate min
+    iSkipFrameRate*: cint         ## skip to frame rate min
+    iSkipFrameStep*: cint         ## how many frames to skip
 
   PRateThresholds* = ptr SRateThresholds
 
-## *
-##  @brief  Structure for decoder memery
-##
 type
   SSysMEMBuffer* {.bycopy.} = object
-    iWidth*: cint              ## /< width of decoded pic for display
-    iHeight*: cint             ## /< height of decoded pic for display
-    iFormat*: cint             ## /< type is "EVideoFormatType"
-    iStride*: array[2, cint]    ## /< stride of 2 component
+    ##  Structure for decoder memery
+    iWidth*: cint                 ## width of decoded pic for display
+    iHeight*: cint                ## height of decoded pic for display
+    iFormat*: EVideoFormatType    ## type is "EVideoFormatType"
+    iStride*: array[2, cint]      ## stride of 2 component
 
-
-## *
-##  @brief  Buffer info
-##
-type
   INNER_C_UNION_test_215* {.bycopy, union.} = object
-    sSystemBuffer*: SSysMEMBuffer ## /<  memory info for one picture
+    sSystemBuffer*: SSysMEMBuffer   ##  memory info for one picture
 
   SBufferInfo* {.bycopy.} = object
-    iBufferStatus*: cint       ## /< 0: one frame data is not ready; 1: one frame data is ready
-    uiInBsTimeStamp*: culonglong ## /< input BS timestamp
-    uiOutYuvTimeStamp*: culonglong ## /< output YUV timestamp, when bufferstatus is 1
-    UsrData*: INNER_C_UNION_test_215 ## /<  output buffer info
-    pDst*: array[3, ptr cuchar]  ## point to picture YUV data
+    ## Buffer info
+    iBufferStatus*: cint                        ## 0: one frame data is not ready; 1: one frame data is ready
+    uiInBsTimeStamp*: culonglong                ## input BS timestamp
+    uiOutYuvTimeStamp*: culonglong              ## output YUV timestamp, when bufferstatus is 1
+    UsrData*: INNER_C_UNION_test_215            ##  output buffer info
+    pDst*: array[3, ptr UncheckedArray[uint8]]  ## point to picture YUV data
 
 
-## *
-##  @brief In a GOP, multiple of the key frame number, derived from
-##         the number of layers(index or array below)
-##
+proc frameReady*(info: var SBufferInfo): bool {.inline.} =
+  # frame data is ready
+  result = info.iBufferStatus == 1
 
-var kiKeyNumMultiple*: array[6, uint8] = [1.uint8, 1, 2, 4, 8, 16]
+proc inTimestamp*(info: var SBufferInfo): uint64 {.inline.} =
+  ## input BS timestamp
+  result = info.uiInBsTimeStamp.uint64
+proc `inTimestamp=`*(info: var SBufferInfo, time: uint64) {.inline.} =
+  ## input BS timestamp
+  info.uiInBsTimeStamp = time.culonglong
+
+proc outTimestamp*(info: var SBufferInfo): uint64 {.inline.} =
+  ## output YUV timestamp, when bufferstatus is ready
+  result = info.uiOutYuvTimeStamp.uint64
+
+proc iWidth*(info: var SBufferInfo): int {.inline.} = 
+  ## width of decoded pic for display
+  result = info.UsrData.sSystemBuffer.iWidth.int
+proc iHeight*(info: var SBufferInfo): int {.inline.} = 
+  ## height of decoded pic for display
+  result = info.UsrData.sSystemBuffer.iHeight.int
+  
+proc iFormat*(info: var SBufferInfo): EVideoFormatType {.inline.} = 
+  ## type is "EVideoFormatType"
+  result = info.UsrData.sSystemBuffer.iFormat
+
+proc iStride*(info: var SBufferInfo): array[3, cint] {.inline.} = 
+  ## stride 
+  result[0] = info.UsrData.sSystemBuffer.iStride[0]
+  result[1] = info.UsrData.sSystemBuffer.iStride[1]
+  result[2] = info.UsrData.sSystemBuffer.iStride[1]
+
+
+var kiKeyNumMultiple*: array[6, uint8] = [1.uint8, 1, 2, 4, 8, 16] ##  In a GOP, multiple of the key frame number, derived from the number of layers(index or array below)

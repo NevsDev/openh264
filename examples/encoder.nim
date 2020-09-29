@@ -1,5 +1,4 @@
 import openh264, streams, times
-import cortona_media
 import turbojpeg
 
 # https://github.com/cisco/openh264/wiki/UsageExampleForEncoder
@@ -26,9 +25,11 @@ var
   i420_img_size: uint # = width * height * 3 div 2  # 12 bits per pixel
   pictureData: ptr UncheckedArray[uint8]
 
-if not tfile2i420("rsc/lion.jpg", pictureData, i420_img_size, width, height):
+if not jpegFile2i420("rsc/lion.jpg", pictureData, i420_img_size, width, height):
   echo "could not generate i420 image"
   quit(1)
+
+echo "size: ", width, "x", height, " | ", i420_img_size
 
 var param: SEncParamExt
 
@@ -36,7 +37,7 @@ param.iUsageType = CAMERA_VIDEO_REAL_TIME
 param.fMaxFrameRate = 30
 param.iPicWidth = width.cint
 param.iPicHeight = height.cint
-param.iTargetBitrate = 500000
+param.iTargetBitrate = 540000
 param.iRCMode = RC_OFF_MODE
 # param.bEnableDenoise = denoise
 param.iNumRefFrame = 1
@@ -51,8 +52,8 @@ if sliceMode != SM_SINGLE_SLICE and sliceMode != SM_SIZELIMITED_SLICE:
     param.iMultipleThreadIdc = 2
 
 for i in 0..<param.iSpatialLayerNum:
-  param.sSpatialLayers[i].iVideoWidth = width.cint shr (param.iSpatialLayerNum - 1 - i)
-  param.sSpatialLayers[i].iVideoHeight = height.cint shr (param.iSpatialLayerNum - 1 - i)
+  param.sSpatialLayers[i].iVideoWidth = width.cint # shr (param.iSpatialLayerNum - 1 - i)
+  param.sSpatialLayers[i].iVideoHeight = height.cint # shr (param.iSpatialLayerNum - 1 - i)
   param.sSpatialLayers[i].fFrameRate = frameRate
   param.sSpatialLayers[i].iSpatialBitrate = param.iTargetBitrate
 
@@ -79,9 +80,11 @@ pic.iPicHeight = height.cint
 pic.iStride[0] = width.cint            
 pic.iStride[1] = width.cint div 2
 pic.iStride[2] = width.cint div 2
+pic.iStride[3] = 0
 pic.pData[0] = pictureData
 pic.pData[1] = pictureData[i420_img_size * 2 div 3].addr
 pic.pData[2] = pictureData[i420_img_size * 10 div 12].addr
+pic.pData[3] = nil
 
 pic.uiTimeStamp = (cpuTime() * 1000).clonglong 
 
