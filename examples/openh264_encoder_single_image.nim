@@ -7,8 +7,6 @@ import turbojpeg
 
 
 ## Example of encoding single image to h264
-
-
 template doWhile(cond, body) =
   body
   while cond:
@@ -33,15 +31,36 @@ echo "size: ", width, "x", height, " | ", i420_img_size
 
 var param: SEncParamExt
 
+encoder.getDefaultParams(param)
+
 param.iUsageType = CAMERA_VIDEO_REAL_TIME
-param.fMaxFrameRate = 30
 param.iPicWidth = width.cint
 param.iPicHeight = height.cint
-param.iTargetBitrate = 540000
+
+# param.iTargetBitrate = 540000
 param.iRCMode = RC_OFF_MODE
-# param.bEnableDenoise = denoise
-param.iNumRefFrame = 1
-param.iSpatialLayerNum = 1
+param.fMaxFrameRate = 30
+param.iTemporalLayerNum = 3 ## temporal layer number, max temporal layer = 4
+param.iSpatialLayerNum = 1 ## spatial layer number,1<= iSpatialLayerNum <= MAX_SPATIAL_LAYER_NUM, MAX_SPATIAL_LAYER_NUM = 4
+# param.sSpatialLayers*: array[MAX_SPATIAL_LAYER_NUM, SSpatialLayerConfig]
+param.iComplexityMode = LOW_COMPLEXITY
+# param.uiIntraPeriod*: cuint                     ## period of Intra frame
+param.iNumRefFrame = AUTO_REF_PIC_COUNT
+# param.eSpsPpsIdStrategy = CONSTANT_ID ## different stategy in adjust ID in SPS/PPS: 0- constant ID, 1-additional ID, 6-mapping and additional
+param.bPrefixNalAddingCtrl = false ## false:not use Prefix NAL; true: use Prefix NAL
+param.bEnableSSEI = true ## false:not use SSEI; true: use SSEI -- TODO: planning to remove the interface of SSEI
+param.bSimulcastAVC = false ## (when encoding more than 1 spatial layer) false: use SVC syntax for higher layers; true: use Simulcast AVC
+param.iPaddingFlag = 0 ## 0:disable padding;1:padding
+param.iEntropyCodingModeFlag = 0 ## 0:CAVLC  1:CABAC.
+
+param.bEnableFrameSkip = false                   ## False: don't skip frame even if VBV buffer overflow.True: allow skipping frames to keep the bitrate within limits
+
+param.bEnableDenoise = true                      ## denoise control
+param.bEnableBackgroundDetection = true         ## background detection control //VAA_BACKGROUND_DETECTION //BGD cmd
+param.bEnableAdaptiveQuant = true               ## adaptive quantization control
+param.bEnableFrameCroppingFlag = true           ## enable frame cropping flag: TRUE always in application
+param.bEnableSceneChangeDetect = true
+param.bIsLosslessLink = true                    ##  LTR advanced setting
 
 var 
   sliceMode = SM_SINGLE_SLICE
@@ -52,8 +71,8 @@ if sliceMode != SM_SINGLE_SLICE and sliceMode != SM_SIZELIMITED_SLICE:
     param.iMultipleThreadIdc = 2
 
 for i in 0..<param.iSpatialLayerNum:
-  param.sSpatialLayers[i].iVideoWidth = width.cint # shr (param.iSpatialLayerNum - 1 - i)
-  param.sSpatialLayers[i].iVideoHeight = height.cint # shr (param.iSpatialLayerNum - 1 - i)
+  param.sSpatialLayers[i].iVideoWidth = width.cint shr (param.iSpatialLayerNum - 1 - i)
+  param.sSpatialLayers[i].iVideoHeight = height.cint shr (param.iSpatialLayerNum - 1 - i)
   param.sSpatialLayers[i].fFrameRate = frameRate
   param.sSpatialLayers[i].iSpatialBitrate = param.iTargetBitrate
 
@@ -68,8 +87,7 @@ discard encoder.initializeExt(param)
 # var videoFormat = videoFormatI420
 # discard encoder.setOption(ENCODER_OPTION_DATAFORMAT, videoFormat.addr)
 
-
-var 
+var
   info: SFrameBSInfo
   pic: SSourcePicture
 
@@ -86,13 +104,13 @@ pic.pData[1] = pictureData[i420_img_size * 2 div 3].addr
 pic.pData[2] = pictureData[i420_img_size * 10 div 12].addr
 pic.pData[3] = nil
 
-pic.uiTimeStamp = (cpuTime() * 1000).clonglong 
 
 var fileStream = newFileStream("test.h264", fmWrite)
 
 for num in 0..<total_num:
   # prepare input data
   rv = encoder.encodeFrame(pic, info)
+  pic.uiTimeStamp += 30;
   assert(rv == true)
   if info.eFrameType != videoFrameTypeSkip: 
     # output bitstream

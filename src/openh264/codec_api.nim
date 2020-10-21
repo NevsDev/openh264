@@ -250,10 +250,10 @@ type
   ISVCEncoder* = ptr ISVCEncoderVtbl
   ISVCEncoderVtbl {.bycopy.} = object
     Initialize: proc (a1: ptr ISVCEncoder; pParam: ptr SEncParamBase): cint {.cdecl.}
-    InitializeExt: proc (a1: ptr ISVCEncoder; pParam: ptr SEncParamExt): cint {.cdecl.}
-    GetDefaultParams: proc (a1: ptr ISVCEncoder; pParam: ptr SEncParamExt): cint {.cdecl.}
+    InitializeExt: proc (a1: ptr ISVCEncoder; pParam: ptr SEncParamExt): cint {.cdecl, gcsafe.}
+    GetDefaultParams: proc (a1: ptr ISVCEncoder; pParam: ptr SEncParamExt): cint {.cdecl, gcsafe.}
     Uninitialize: proc (a1: ptr ISVCEncoder): cint {.cdecl.}
-    EncodeFrame: proc (a1: ptr ISVCEncoder; kpSrcPic: ptr SSourcePicture; pBsInfo: ptr SFrameBSInfo): cint {.cdecl.}
+    EncodeFrame: proc (a1: ptr ISVCEncoder; kpSrcPic: ptr SSourcePicture; pBsInfo: ptr SFrameBSInfo): cint {.cdecl, gcsafe.}
     EncodeParameterSets: proc (a1: ptr ISVCEncoder; pBsInfo: ptr SFrameBSInfo): cint {.cdecl.}
     ForceIntraFrame: proc (a1: ptr ISVCEncoder; bIDR: bool): cint {.cdecl.}
     SetOption: proc (a1: ptr ISVCEncoder; eOptionId: ENCODER_OPTION; pOption: pointer): cint {.cdecl.}
@@ -263,7 +263,7 @@ type
   ISVCDecoderVtbl {.bycopy.} = object
     Initialize: proc (a1: ptr ISVCDecoder; pParam: ptr SDecodingParam): clong {.cdecl.}
     Uninitialize: proc (a1: ptr ISVCDecoder): clong {.cdecl.}
-    DecodeFrame: proc (a1: ptr ISVCDecoder; pSrc: ptr UncheckedArray[uint8]; iSrcLen: cint; ppDst: array[3, ptr UncheckedArray[uint8]]; pStride: ptr cint; iWidth: ptr cint; iHeight: ptr cint): DECODING_STATE {.cdecl.}
+    DecodeFrame: proc (a1: ptr ISVCDecoder; pSrc: pointer; iSrcLen: cint; ppDst: array[3, ptr UncheckedArray[uint8]]; pStride: ptr cint; iWidth: ptr cint; iHeight: ptr cint): DECODING_STATE {.cdecl.}
     DecodeFrameNoDelay: proc (a1: ptr ISVCDecoder; pSrc: pointer; iSrcLen: cint; ppDst: array[3, ptr UncheckedArray[uint8]]; pDstInfo: ptr SBufferInfo): DECODING_STATE {.cdecl.} 
     DecodeFrame2: proc (a1: ptr ISVCDecoder; pSrc: pointer; iSrcLen: cint; ppDst: array[3, ptr UncheckedArray[uint8]]; pDstInfo: ptr SBufferInfo): DECODING_STATE {.cdecl.}
     FlushFrame: proc (a1: ptr ISVCDecoder; ppDst: array[3, ptr UncheckedArray[uint8]]; pDstInfo: ptr SBufferInfo): DECODING_STATE {.cdecl.}
@@ -278,12 +278,12 @@ proc initialize*(a1: ptr ISVCEncoder; pParam: var SEncParamBase): int {.inline, 
   a1.Initialize(a1, pParam.addr).int
 proc initializeExt*(a1: ptr ISVCEncoder; pParam: var SEncParamExt): int {.inline, discardable.} = 
   a1.InitializeExt(a1, pParam.addr).int
-proc getDefaultParams*(a1: ptr ISVCEncoder; pParam: var SEncParamExt): int {.inline.} = 
+proc getDefaultParams*(a1: ptr ISVCEncoder; pParam: var SEncParamExt): int {.inline, discardable.} = 
   a1.GetDefaultParams(a1, pParam.addr).int
 proc uninitialize*(a1: ptr ISVCEncoder): int {.inline.} = 
   a1.Uninitialize(a1).int
 proc encodeFrame*(a1: ptr ISVCEncoder, kpSrcPic: var SSourcePicture, pBsInfo: var SFrameBSInfo): bool {.inline.} = 
-  result = a1.EncodeFrame(a1, kpSrcPic.addr, pBsInfo.addr) == 0
+  result = a1.EncodeFrame(a1, kpSrcPic.addr, pBsInfo.addr) == cmResultSuccess.cint
 proc encodeParameterSets*(a1: ptr ISVCEncoder, pBsInfo: var SFrameBSInfo): int {.inline.} = 
   a1.EncodeParameterSets(a1, pBsInfo.addr).int
 proc forceIntraFrame*(a1: ptr ISVCEncoder, bIDR: bool): int {.inline.} = 
@@ -298,7 +298,7 @@ proc initialize*(a1: ptr ISVCDecoder; pParam: var SDecodingParam): int {.inline.
   a1.Initialize(a1, pParam.addr).int
 proc uninitialize*(a1: ptr ISVCDecoder): int {.inline, discardable.} = 
   a1.Uninitialize(a1).int
-proc decodeFrame*(a1: ptr ISVCDecoder; pSrc: ptr UncheckedArray[uint8], iSrcLen: int; ppDst: array[3, ptr UncheckedArray[uint8]], pStride, iWidth, iHeight: var int): DECODING_STATE {.inline.} = 
+proc decodeFrame*(a1: ptr ISVCDecoder; pSrc: pointer, iSrcLen: int; ppDst: array[3, ptr UncheckedArray[uint8]], pStride, iWidth, iHeight: var int): DECODING_STATE {.inline.} = 
   var pstr, width, height: cint
   result = a1.DecodeFrame(a1, pSrc, iSrcLen.cint, ppDst, pstr.addr, width.addr, height.addr)
   pStride = pstr.int
@@ -318,7 +318,7 @@ proc decodeFrameEx*(a1: ptr ISVCDecoder; pSrc: pointer, iSrcLen: int; pDst: ptr 
   iDstLen = len.int
   iWidth = width.int
   iHeight = height.int
-proc setOption*(a1: ptr ISVCDecoder, eOptionId: DECODER_OPTION, pOption: pointer): int {.inline.} = 
+proc setOption*(a1: ptr ISVCDecoder, eOptionId: DECODER_OPTION, pOption: pointer): int {.inline, discardable.} = 
   result = a1.SetOption(a1, eOptionId, pOption).int
 proc getOption*(a1: ptr ISVCDecoder; eOptionId: DECODER_OPTION; pOption: pointer): int {.inline.} = 
   result = a1.GetOption(a1, eOptionId, pOption).int

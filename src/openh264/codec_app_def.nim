@@ -430,12 +430,12 @@ type
 ##  @brief SVC Encoding Parameters extention
 type
   SEncParamExt* {.bycopy.} = object
-    iUsageType*: EUsageType                   ## same as in TagEncParamBase
-    iPicWidth*: cint                          ## same as in TagEncParamBase
-    iPicHeight*: cint                         ## same as in TagEncParamBase
-    iTargetBitrate*: cint                     ## same as in TagEncParamBase
-    iRCMode*: RC_MODES                        ## same as in TagEncParamBase
-    fMaxFrameRate*: cfloat                    ## same as in TagEncParamBase
+    iUsageType*: EUsageType
+    iPicWidth*: cint
+    iPicHeight*: cint
+    iTargetBitrate*: cint
+    iRCMode*: RC_MODES
+    fMaxFrameRate*: cfloat
     iTemporalLayerNum*: cint                  ## temporal layer number, max temporal layer = 4
     iSpatialLayerNum*: cint                   ## spatial layer number,1<= iSpatialLayerNum <= MAX_SPATIAL_LAYER_NUM, MAX_SPATIAL_LAYER_NUM = 4
     sSpatialLayers*: array[MAX_SPATIAL_LAYER_NUM, SSpatialLayerConfig]
