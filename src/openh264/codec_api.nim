@@ -252,7 +252,7 @@ type
     Initialize: proc (a1: ptr ISVCEncoder; pParam: ptr SEncParamBase): cint {.cdecl.}
     InitializeExt: proc (a1: ptr ISVCEncoder; pParam: ptr SEncParamExt): cint {.cdecl, gcsafe.}
     GetDefaultParams: proc (a1: ptr ISVCEncoder; pParam: ptr SEncParamExt): cint {.cdecl, gcsafe.}
-    Uninitialize: proc (a1: ptr ISVCEncoder): cint {.cdecl.}
+    Uninitialize: proc (a1: ptr ISVCEncoder): cint {.cdecl, gcsafe.}
     EncodeFrame: proc (a1: ptr ISVCEncoder; kpSrcPic: ptr SSourcePicture; pBsInfo: ptr SFrameBSInfo): cint {.cdecl, gcsafe.}
     EncodeParameterSets: proc (a1: ptr ISVCEncoder; pBsInfo: ptr SFrameBSInfo): cint {.cdecl.}
     ForceIntraFrame: proc (a1: ptr ISVCEncoder; bIDR: bool): cint {.cdecl.}

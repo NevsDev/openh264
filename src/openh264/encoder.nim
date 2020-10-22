@@ -1,56 +1,82 @@
 import turbojpeg, streams
 import codec_def, codec_app_def, codec_api
 
-## Example of encoding single image to h264
 template doWhile(cond, body) =
   body
   while cond:
     body
 
-var 
-  g_enc {.threadvar.}: ptr ISVCEncoder
-  g_param {.threadvar.}: SEncParamExt
-  g_pic {.threadvar.}: SSourcePicture
-  g_info {.threadvar.}: SFrameBSInfo
-  g_i420_buffer {.threadvar.}: ptr UncheckedArray[uint8]
-  g_width {.threadvar.}: int
-  g_height {.threadvar.}: int
-  g_timePerFrame {.threadvar.}: clonglong
+type 
+  H264Encoder* = ptr H264EncoderObj
+  H264EncoderObj* = object
+    enc: ptr ISVCEncoder
+    param: SEncParamExt
+    pic: SSourcePicture
+    info: SFrameBSInfo
+    i420_buffer: ptr UncheckedArray[uint8]
+    width: int
+    height: int
+    timePerFrame: clonglong
 
+var ge {.threadvar.}: H264Encoder
 
-proc g_encoder(): ptr ISVCEncoder =
-  if g_enc == nil:
-    discard WelsCreateSVCEncoder(g_enc)
-  return g_enc
+proc encoder(e: H264Encoder): ptr ISVCEncoder =
+  if e.enc == nil:
+    discard WelsCreateSVCEncoder(e.enc)
+  return e.enc
+
+proc destroy*(e: var H264Encoder) =
+  if e.enc == nil:
+    discard e.enc.uninitialize()
+    WelsDestroySVCEncoder(e.enc)
+    e.enc = nil
+  if e.i420_buffer != nil:
+    e.i420_buffer.dealloc()
+  e.dealloc()
+  e = nil
+
+proc reset(e: H264Encoder) =
+  if e.enc != nil:
+    discard e.enc.uninitialize()
+    WelsDestroySVCEncoder(e.enc)
+    e.enc = nil
+
+proc defaultEncoder(): H264Encoder =
+  if ge == nil:
+    ge = create(H264EncoderObj)
+  return ge
 
 proc h264EncoderInit*(width, height: int, fps: float) {.gcsafe.} =
-  g_encoder().getDefaultParams(g_param)
+  var h264enc = defaultEncoder()
   
-  g_param.iUsageType = CAMERA_VIDEO_REAL_TIME
-  g_param.iPicWidth = width.cint
-  g_param.iPicHeight = height.cint
-  # g_param.iTargetBitrate = 540000
-  g_param.iRCMode = RC_OFF_MODE
-  g_param.fMaxFrameRate = fps
-  g_param.iTemporalLayerNum = 3 ## temporal layer number, max temporal layer = 4
-  g_param.iSpatialLayerNum = 1 ## spatial layer number,1<= iSpatialLayerNum <= MAX_SPATIAL_LAYER_NUM, MAX_SPATIAL_LAYER_NUM = 4
-  g_param.iComplexityMode = LOW_COMPLEXITY
-  # g_param.uiIntraPeriod*: cuint ## period of Intra frame
-  g_param.iNumRefFrame = AUTO_REF_PIC_COUNT
-  # g_param.eSpsPpsIdStrategy = CONSTANT_ID ## different stategy in adjust ID in SPS/PPS: 0- constant ID, 1-additional ID, 6-mapping and additional
-  g_param.bPrefixNalAddingCtrl = false ## false:not use Prefix NAL; true: use Prefix NAL
-  g_param.bEnableSSEI = true ## false:not use SSEI; true: use SSEI -- TODO: planning to remove the interface of SSEI
-  g_param.bSimulcastAVC = false ## (when encoding more than 1 spatial layer) false: use SVC syntax for higher layers; true: use Simulcast AVC
-  g_param.iPaddingFlag = 0 ## 0:disable padding;1:padding
-  g_param.iEntropyCodingModeFlag = 0 ## 0:CAVLC  1:CABAC.
-  g_param.bEnableFrameSkip = false                   ## False: don't skip frame even if VBV buffer overflow.True: allow skipping frames to keep the bitrate within limits
+  h264enc.reset()
+  h264enc.encoder.getDefaultParams(ge.param)
+  
+  h264enc.param.iUsageType = CAMERA_VIDEO_REAL_TIME
+  h264enc.param.iPicWidth = width.cint
+  h264enc.param.iPicHeight = height.cint
+  # h264enc.param.iTargetBitrate = 540000
+  h264enc.param.iRCMode = RC_OFF_MODE
+  h264enc.param.fMaxFrameRate = fps
+  h264enc.param.iTemporalLayerNum = 3 ## temporal layer number, max temporal layer = 4
+  h264enc.param.iSpatialLayerNum = 1 ## spatial layer number,1<= iSpatialLayerNum <= MAX_SPATIAL_LAYER_NUM, MAX_SPATIAL_LAYER_NUM = 4
+  h264enc.param.iComplexityMode = LOW_COMPLEXITY
+  # h264enc.param.uiIntraPeriod*: cuint ## period of Intra frame
+  h264enc.param.iNumRefFrame = AUTO_REF_PIC_COUNT
+  # h264enc.param.eSpsPpsIdStrategy = CONSTANT_ID ## different stategy in adjust ID in SPS/PPS: 0- constant ID, 1-additional ID, 6-mapping and additional
+  h264enc.param.bPrefixNalAddingCtrl = false ## false:not use Prefix NAL; true: use Prefix NAL
+  h264enc.param.bEnableSSEI = true ## false:not use SSEI; true: use SSEI -- TODO: planning to remove the interface of SSEI
+  h264enc.param.bSimulcastAVC = false ## (when encoding more than 1 spatial layer) false: use SVC syntax for higher layers; true: use Simulcast AVC
+  h264enc.param.iPaddingFlag = 0 ## 0:disable padding;1:padding
+  h264enc.param.iEntropyCodingModeFlag = 0 ## 0:CAVLC  1:CABAC.
+  h264enc.param.bEnableFrameSkip = false                   ## False: don't skip frame even if VBV buffer overflow.True: allow skipping frames to keep the bitrate within limits
 
-  g_param.bEnableDenoise = true                      ## denoise control
-  g_param.bEnableBackgroundDetection = true         ## background detection control //VAA_BACKGROUND_DETECTION //BGD cmd
-  g_param.bEnableAdaptiveQuant = true               ## adaptive quantization control
-  g_param.bEnableFrameCroppingFlag = true           ## enable frame cropping flag: TRUE always in application
-  g_param.bEnableSceneChangeDetect = true
-  g_param.bIsLosslessLink = true                    ##  LTR advanced setting
+  h264enc.param.bEnableDenoise = true                      ## denoise control
+  h264enc.param.bEnableBackgroundDetection = true         ## background detection control //VAA_BACKGROUND_DETECTION //BGD cmd
+  h264enc.param.bEnableAdaptiveQuant = true               ## adaptive quantization control
+  h264enc.param.bEnableFrameCroppingFlag = true           ## enable frame cropping flag: TRUE always in application
+  h264enc.param.bEnableSceneChangeDetect = true
+  h264enc.param.bIsLosslessLink = true                    ##  LTR advanced setting
   
   var 
     sliceMode = SM_SINGLE_SLICE
@@ -58,50 +84,51 @@ proc h264EncoderInit*(width, height: int, fps: float) {.gcsafe.} =
 
   # SM_SIZELIMITED_SLICE with multi-thread is still under testing
   if sliceMode != SM_SINGLE_SLICE and sliceMode != SM_SIZELIMITED_SLICE:
-      g_param.iMultipleThreadIdc = 2
+      h264enc.param.iMultipleThreadIdc = 2
 
-  for i in 0..<g_param.iSpatialLayerNum:
-    g_param.sSpatialLayers[i].iVideoWidth = width.cint shr (g_param.iSpatialLayerNum - 1 - i)
-    g_param.sSpatialLayers[i].iVideoHeight = height.cint shr (g_param.iSpatialLayerNum - 1 - i)
-    g_param.sSpatialLayers[i].fFrameRate = frameRate
-    g_param.sSpatialLayers[i].iSpatialBitrate = g_param.iTargetBitrate
+  for i in 0..<h264enc.param.iSpatialLayerNum:
+    h264enc.param.sSpatialLayers[i].iVideoWidth = width.cint shr (h264enc.param.iSpatialLayerNum - 1 - i)
+    h264enc.param.sSpatialLayers[i].iVideoHeight = height.cint shr (h264enc.param.iSpatialLayerNum - 1 - i)
+    h264enc.param.sSpatialLayers[i].fFrameRate = frameRate
+    h264enc.param.sSpatialLayers[i].iSpatialBitrate = h264enc.param.iTargetBitrate
 
-    g_param.sSpatialLayers[i].sSliceArgument.uiSliceMode = sliceMode
+    h264enc.param.sSpatialLayers[i].sSliceArgument.uiSliceMode = sliceMode
     if sliceMode == SM_SIZELIMITED_SLICE:
-        g_param.sSpatialLayers[i].sSliceArgument.uiSliceSizeConstraint = 600
-        g_param.uiMaxNalSize = 1500
+        h264enc.param.sSpatialLayers[i].sSliceArgument.uiSliceSizeConstraint = 600
+        h264enc.param.uiMaxNalSize = 1500
 
-  g_param.iTargetBitrate *= g_param.iSpatialLayerNum;
-  discard g_enc.initializeExt(g_param)
-
+  h264enc.param.iTargetBitrate *= h264enc.param.iSpatialLayerNum;
+  discard h264enc.enc.initializeExt(h264enc.param)
 
   # init pic for encoding
-  g_i420_buffer = cast[ptr UncheckedArray[uint8]](realloc(g_i420_buffer, 3 * width * height))
-  g_width = width
-  g_height = height
-  g_timePerFrame = (1000.0 / fps).clonglong
+  h264enc.i420_buffer = cast[ptr UncheckedArray[uint8]](realloc(h264enc.i420_buffer, 3 * width * height))
+  h264enc.width = width
+  h264enc.height = height
+  h264enc.timePerFrame = (1000.0 / fps).clonglong
 
-  g_pic.uiTimeStamp = 0
-  g_pic.iColorFormat = EVideoFormatType.videoFormatI420
-  g_pic.iPicWidth = width.cint
-  g_pic.iPicHeight = height.cint
+  h264enc.pic.uiTimeStamp = 0
+  h264enc.pic.iColorFormat = EVideoFormatType.videoFormatI420
+  h264enc.pic.iPicWidth = width.cint
+  h264enc.pic.iPicHeight = height.cint
 
-  g_pic.iStride[0] = width.cint            
-  g_pic.iStride[1] = width.cint div 2
-  g_pic.iStride[2] = width.cint div 2
-  g_pic.iStride[3] = 0
-  g_pic.pData[3] = nil
+  h264enc.pic.iStride[0] = width.cint            
+  h264enc.pic.iStride[1] = width.cint div 2
+  h264enc.pic.iStride[2] = width.cint div 2
+  h264enc.pic.iStride[3] = 0
+  h264enc.pic.pData[3] = nil
 
 
 proc h264Encodei420*(i420_data: ptr UncheckedArray[uint8], i420_size: int, stream: Stream): bool {.gcsafe.} =
-  g_pic.pData[0] = i420_data[0].addr
-  g_pic.pData[1] = i420_data[i420_size * 2 div 3].addr
-  g_pic.pData[2] = i420_data[i420_size * 10 div 12].addr
+  var h264enc = default_encoder()
+  
+  h264enc.pic.pData[0] = i420_data[0].addr
+  h264enc.pic.pData[1] = i420_data[i420_size * 2 div 3].addr
+  h264enc.pic.pData[2] = i420_data[i420_size * 10 div 12].addr
 
-  if g_encoder().encodeFrame(g_pic, g_info) and g_info.eFrameType != videoFrameTypeSkip: 
-    for iLayer in 0..<g_info.iLayerNum:
+  if h264enc.enc.encodeFrame(h264enc.pic, h264enc.info) and h264enc.info.eFrameType != videoFrameTypeSkip: 
+    for iLayer in 0..<h264enc.info.iLayerNum:
       var
-        pLayerBsInfo = g_info.sLayerInfo[iLayer].addr
+        pLayerBsInfo = h264enc.info.sLayerInfo[iLayer].addr
         iLayerSize = 0
         iNalIdx = pLayerBsInfo.iNalCount - 1
       
@@ -110,26 +137,27 @@ proc h264Encodei420*(i420_data: ptr UncheckedArray[uint8], i420_size: int, strea
         iNalIdx -= 1
 
       stream.writeData(pLayerBsInfo.pBsBuf, iLayerSize)
-    g_pic.uiTimeStamp += g_timePerFrame
+    h264enc.pic.uiTimeStamp += h264enc.timePerFrame
     return true
   else:
     return false
 
 
 proc h264EncodeRGB*(rgb_data: pointer, stream: Stream): bool {.gcsafe.} =
+  var h264enc = default_encoder()
   var i420_size: uint
 
-  if not turbojpeg.rgb2yuv(rgb_data, g_width, g_height, g_i420_buffer, i420_size, TJSAMP_420, FAST_FLAGS):
+  if not turbojpeg.rgb2yuv(rgb_data, h264enc.width, h264enc.height, h264enc.i420_buffer, i420_size, TJSAMP_420, FAST_FLAGS):
     return false
 
-  g_pic.pData[0] = g_i420_buffer[0].addr
-  g_pic.pData[1] = g_i420_buffer[i420_size * 2 div 3].addr
-  g_pic.pData[2] = g_i420_buffer[i420_size * 10 div 12].addr
+  h264enc.pic.pData[0] = h264enc.i420_buffer[0].addr
+  h264enc.pic.pData[1] = h264enc.i420_buffer[i420_size * 2 div 3].addr
+  h264enc.pic.pData[2] = h264enc.i420_buffer[i420_size * 10 div 12].addr
 
-  if g_encoder().encodeFrame(g_pic, g_info) and g_info.eFrameType != videoFrameTypeSkip: 
-    for iLayer in 0..<g_info.iLayerNum:
+  if h264enc.enc.encodeFrame(h264enc.pic, h264enc.info) and h264enc.info.eFrameType != videoFrameTypeSkip: 
+    for iLayer in 0..<h264enc.info.iLayerNum:
       var
-        pLayerBsInfo = g_info.sLayerInfo[iLayer].addr
+        pLayerBsInfo = h264enc.info.sLayerInfo[iLayer].addr
         iLayerSize = 0
         iNalIdx = pLayerBsInfo.iNalCount - 1
       
@@ -138,26 +166,27 @@ proc h264EncodeRGB*(rgb_data: pointer, stream: Stream): bool {.gcsafe.} =
         iNalIdx -= 1
 
       stream.writeData(pLayerBsInfo.pBsBuf, iLayerSize)
-    g_pic.uiTimeStamp += g_timePerFrame
+    h264enc.pic.uiTimeStamp += h264enc.timePerFrame
     return true
   else:
     return false
 
 proc h264EncodeJpeg*(jpeg_data: pointer, jpeg_size: uint, stream: Stream): bool {.gcsafe.} =
+  var h264enc = default_encoder()
   var 
     i420_size: uint
-    success = turbojpeg.jpeg2i420(jpeg_data, jpeg_size, g_i420_buffer, i420_size, g_width, g_height, FAST_FLAGS)
+    success = turbojpeg.jpeg2i420(jpeg_data, jpeg_size, h264enc.i420_buffer, i420_size, h264enc.width, h264enc.height, FAST_FLAGS)
   if not success:
     return false
 
-  g_pic.pData[0] = g_i420_buffer[0].addr
-  g_pic.pData[1] = g_i420_buffer[i420_size * 2 div 3].addr
-  g_pic.pData[2] = g_i420_buffer[i420_size * 10 div 12].addr
+  h264enc.pic.pData[0] = h264enc.i420_buffer[0].addr
+  h264enc.pic.pData[1] = h264enc.i420_buffer[i420_size * 2 div 3].addr
+  h264enc.pic.pData[2] = h264enc.i420_buffer[i420_size * 10 div 12].addr
 
-  if g_encoder().encodeFrame(g_pic, g_info) and g_info.eFrameType != videoFrameTypeSkip: 
-    for iLayer in 0..<g_info.iLayerNum:
+  if h264enc.enc.encodeFrame(h264enc.pic, h264enc.info) and h264enc.info.eFrameType != videoFrameTypeSkip: 
+    for iLayer in 0..<h264enc.info.iLayerNum:
       var
-        pLayerBsInfo = g_info.sLayerInfo[iLayer].addr
+        pLayerBsInfo = h264enc.info.sLayerInfo[iLayer].addr
         iLayerSize = 0
         iNalIdx = pLayerBsInfo.iNalCount - 1
       
@@ -166,13 +195,11 @@ proc h264EncodeJpeg*(jpeg_data: pointer, jpeg_size: uint, stream: Stream): bool 
         iNalIdx -= 1
 
       stream.writeData(pLayerBsInfo.pBsBuf, iLayerSize)
-    g_pic.uiTimeStamp += g_timePerFrame
+    h264enc.pic.uiTimeStamp += h264enc.timePerFrame
     return true
   else:
     return false
 
-# proc deinitEncoder*() =
-#   if g_enc != nil:
-#     discard g_enc.uninitialize()
-#     WelsDestroySVCEncoder(g_enc)
-#     g_enc = nil
+proc h264EncoderDeinit*() =
+  if ge != nil:
+    ge.destroy()

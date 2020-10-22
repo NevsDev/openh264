@@ -63,10 +63,7 @@ while true:
     counter.inc
     discard i4202jpegFile(sDstBufInfo.pDst, sDstBufInfo.iWidth, sDstBufInfo.iHeight, "test.jpeg", jpegQual = 80, sDstBufInfo.iStride)
 
-
   discard pSvcDecoder.flushFrame(sDstBufInfo.pDst, sDstBufInfo)
-
-
 
 pSvcDecoder.uninitialize()
 WelsDestroyDecoder(pSvcDecoder)
