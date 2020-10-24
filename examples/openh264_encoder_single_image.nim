@@ -105,7 +105,7 @@ pic.pData[2] = pictureData[i420_img_size * 10 div 12].addr
 pic.pData[3] = nil
 
 
-var fileStream = newFileStream("test.h264", fmWrite)
+var fileStream = newFileStream("test_output/test.h264", fmWrite)
 
 for num in 0..<total_num:
   # prepare input data

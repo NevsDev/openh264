@@ -6,7 +6,7 @@ const
   height = 600
 
 var
-  outputFile = newFileStream("color.h264", fmWrite)
+  outputFile = newFileStream("test_output/color.h264", fmWrite)
 
 h264EncoderInit(width, height, 30)
 for i in 0'u8..<255'u8:

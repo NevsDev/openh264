@@ -1,16 +1,20 @@
-*.so
-*.dynlib
-*.dll
-*.h264
-*.jpg
-*.jpeg
-!src/openh264_bin/*
+# Ignore all
+*
+# Unignore all with extensions
+!*.*
+# Unignore all dirs
+!*/
 
+*.exe
 
-examples/**
-!examples/**.nim
-!examples/**.nims
+./*.zip
+./*.jpg
+test_output
 
-tests/**
-!tests/**.nim
-!tests/**.nims
+/*.so
+/*.dynlib
+/*.dll
+/*.h264
+/*.jpg
+/*.jpeg
+

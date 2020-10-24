@@ -30,13 +30,15 @@ else:
   {.error: "This platform is not supported now.".} 
 
 
-const rawLibPath = joinPath(getBinDir(), openh264)
-const rawLib = staticRead(rawLibPath) 
 
 const dynLibPath = openh264
 
-if not fileExists(dynLibPath):
-  writeFile(dynLibPath, rawLib)
+when not defined(noEmbedH264):
+  const rawLibPath = joinPath(getBinDir(), openh264)
+  const rawLib = staticRead(rawLibPath) 
+  if not fileExists(dynLibPath):
+    writeFile(dynLibPath, rawLib)
+
 let openh264lib* = loadLib(dynLibPath)
 
 # let lib = loadLib(dynLibPath)

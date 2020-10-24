@@ -261,7 +261,7 @@ type
 
   ISVCDecoder* = ptr ISVCDecoderVtbl
   ISVCDecoderVtbl {.bycopy.} = object
-    Initialize: proc (a1: ptr ISVCDecoder; pParam: ptr SDecodingParam): clong {.cdecl.}
+    Initialize: proc (a1: ptr ISVCDecoder; pParam: ptr SDecodingParam): clong {.cdecl, stdcall.}
     Uninitialize: proc (a1: ptr ISVCDecoder): clong {.cdecl.}
     DecodeFrame: proc (a1: ptr ISVCDecoder; pSrc: pointer; iSrcLen: cint; ppDst: array[3, ptr UncheckedArray[uint8]]; pStride: ptr cint; iWidth: ptr cint; iHeight: ptr cint): DECODING_STATE {.cdecl.}
     DecodeFrameNoDelay: proc (a1: ptr ISVCDecoder; pSrc: pointer; iSrcLen: cint; ppDst: array[3, ptr UncheckedArray[uint8]]; pDstInfo: ptr SBufferInfo): DECODING_STATE {.cdecl.} 
@@ -295,7 +295,7 @@ proc getOption*(a1: ptr ISVCEncoder, eOptionId: ENCODER_OPTION, pOption: pointer
 
 
 proc initialize*(a1: ptr ISVCDecoder; pParam: var SDecodingParam): int {.inline.} = 
-  a1.Initialize(a1, pParam.addr).int
+  result = a1.Initialize(a1, pParam.addr).int
 proc uninitialize*(a1: ptr ISVCDecoder): int {.inline, discardable.} = 
   a1.Uninitialize(a1).int
 proc decodeFrame*(a1: ptr ISVCDecoder; pSrc: pointer, iSrcLen: int; ppDst: array[3, ptr UncheckedArray[uint8]], pStride, iWidth, iHeight: var int): DECODING_STATE {.inline.} = 
@@ -326,41 +326,41 @@ proc getOption*(a1: ptr ISVCDecoder; eOptionId: DECODER_OPTION; pOption: pointer
 
 #################################################################################################################################################
 type
-  WelsTraceCallback* = proc (ctx: pointer; level: cint; string: cstring) {.cdecl, stdcall.}
+  WelsTraceCallback* = proc (ctx: pointer; level: cint; string: cstring) {.cdecl, stdcall, cdecl.}
 
-type CreateSVCEncoder = proc(ppEncoder: ptr ptr ISVCEncoder): cint {.gcsafe, stdcall.}
+type CreateSVCEncoder = proc(ppEncoder: ptr ptr ISVCEncoder): cint {.gcsafe, stdcall, cdecl.}
 let welsCreateSVCEncoder = cast[CreateSVCEncoder](openh264lib.symAddr("WelsCreateSVCEncoder"))
 proc WelsCreateSVCEncoder*(ppEncoder: var ptr ISVCEncoder): bool {.inline, discardable.} = 
   result = welsCreateSVCEncoder(ppEncoder.addr) == 0
 
-type destroySVCEncoder = proc(pEncoder: ptr ISVCEncoder) {.gcsafe, stdcall.}
+type destroySVCEncoder = proc(pEncoder: ptr ISVCEncoder) {.gcsafe, stdcall, cdecl.}
 let welsDestroySVCEncoder = cast[destroySVCEncoder](openh264lib.symAddr("WelsDestroySVCEncoder"))
 proc WelsDestroySVCEncoder*(pEncoder: ptr ISVCEncoder) {.inline.} = 
   welsDestroySVCEncoder(pEncoder)
 
-type getDecoderCapability = proc(pDecCapability: ptr SDecoderCapability): cint {.gcsafe, stdcall.}
+type getDecoderCapability = proc(pDecCapability: ptr SDecoderCapability): cint {.gcsafe, stdcall, cdecl.}
 let welsGetDecoderCapability = cast[getDecoderCapability](openh264lib.symAddr("WelsGetDecoderCapability"))
 proc WelsGetDecoderCapability*(pDecCapability: ptr SDecoderCapability): bool {.inline, discardable.} =
   result = welsGetDecoderCapability(pDecCapability) == 0
 
-type createDecoder = proc(ppDecoder: ptr ptr ISVCDecoder): clong {.gcsafe, stdcall.}
+type createDecoder = proc(ppDecoder: ptr ptr ISVCDecoder): clong {.gcsafe, stdcall, cdecl.}
 let welsCreateDecoder = cast[createDecoder](openh264lib.symAddr("WelsCreateDecoder")) 
-proc WelsCreateDecoder*(ppDecoder: var ptr ISVCDecoder): bool {.inline, discardable.} =
+proc WelsCreateDecoder*(ppDecoder: var ptr ISVCDecoder): bool {.discardable, inline.} =
   result = welsCreateDecoder(ppDecoder.addr) == 0
 
-type destroyDecoder = proc(pDecoder: ptr ISVCDecoder) {.gcsafe, stdcall.}
+type destroyDecoder = proc(pDecoder: ptr ISVCDecoder) {.gcsafe, stdcall, cdecl.}
 let welsDestroyDecoder = cast[destroyDecoder](openh264lib.symAddr("WelsDestroyDecoder")) 
 proc WelsDestroyDecoder*(pDecoder: ptr ISVCDecoder) {.inline.} =
   welsDestroyDecoder(pDecoder)
 
 
-type getCodecVersion = proc(): OpenH264Version {.gcsafe, stdcall.}
+type getCodecVersion = proc(): OpenH264Version {.gcsafe, stdcall, cdecl.}
 let welsGetCodecVersion = cast[getCodecVersion](openh264lib.symAddr("WelsGetCodecVersion")) 
 proc WelsGetCodecVersion*(): OpenH264Version {.inline.} =
   # return  The linked codec version
   welsGetCodecVersion()
 
-type getCodecVersionEx = proc(pVersion: ptr OpenH264Version) {.gcsafe, stdcall.}
+type getCodecVersionEx = proc(pVersion: ptr OpenH264Version) {.gcsafe, stdcall, cdecl.}
 let welsGetCodecVersionEx = cast[getCodecVersionEx](openh264lib.symAddr("WelsGetCodecVersionEx")) 
   # proc(pVersion: ptr OpenH264Version)
 proc WelsGetCodecVersionEx*(pVersion: var OpenH264Version) {.inline.} =

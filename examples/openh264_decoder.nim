@@ -7,7 +7,7 @@ import turbojpeg
 # Step 1: decoder 
 # open source
 var 
-  rawFile = readFile("test.h264")
+  rawFile = readFile("test_output/test.h264")
   src_buffer = cast[ptr UncheckedArray[uint8]](rawFile[0].addr)
   src_bffer_size = rawFile.len.uint
 
@@ -46,22 +46,25 @@ while true:
   iSliceSize = i
   if dsErrorFree != pSvcDecoder.decodeFrameNoDelay(src_buffer[iBufPos].addr, iSliceSize.int, sDstBufInfo.pDst, sDstBufInfo):
     echo "Decoding error"
-  iBufPos += iSliceSize
  
   # var nowTime = (cpuTime() * 100).uint
   # sDstBufInfo.inTimestamp = sDstBufInfo.inTimestamp + nowTime - lastTime
   # lastTime = nowTime
   var frame_num: cint
   var stat: SDecoderStatistics
-
   discard pSvcDecoder.getOption(DECODER_OPTION_FRAME_NUM, frame_num.addr)
   # discard pSvcDecoder.getOption(DECODER_OPTION_GET_STATISTICS, stat.addr)
-  echo "Frames ", frame_num
 
+  echo iBufPos, " ", iSliceSize, " ", frame_num
+  iBufPos += iSliceSize
   if sDstBufInfo.frameReady:    
-    echo counter, " ", iBufPos, " ", sDstBufInfo
+    # echo counter, " ", iBufPos, " ", sDstBufInfo
     counter.inc
-    discard i4202jpegFile(sDstBufInfo.pDst, sDstBufInfo.iWidth, sDstBufInfo.iHeight, "test.jpeg", jpegQual = 80, sDstBufInfo.iStride)
+    discard i4202jpegFile(sDstBufInfo.pDst, sDstBufInfo.iWidth, sDstBufInfo.iHeight, "test_output/test.jpeg", jpegQual = 80, sDstBufInfo.iStride)
+  else:
+    discard
+  if counter == 4:
+    quit(0)
 
   discard pSvcDecoder.flushFrame(sDstBufInfo.pDst, sDstBufInfo)
 
