@@ -7,7 +7,7 @@ template doWhile(cond, body) =
     body
 
 type 
-  H264Encoder* = ptr H264EncoderObj
+  H264Encoder* = ref H264EncoderObj
   H264EncoderObj* = object
     enc: ptr ISVCEncoder
     param: SEncParamExt
@@ -18,20 +18,13 @@ type
     height: int
     timePerFrame: clonglong
 
-proc encoder(e: H264Encoder): ptr ISVCEncoder =
-  if e.enc == nil:
-    discard WelsCreateSVCEncoder(e.enc)
-  return e.enc
-
-proc destroy*(e: var H264Encoder) =
+proc cleanUp(e: H264Encoder) =
   if e.enc == nil:
     discard e.enc.uninitialize()
     WelsDestroySVCEncoder(e.enc)
     e.enc = nil
   if e.i420_buffer != nil:
     e.i420_buffer.dealloc()
-  e.dealloc()
-  e = nil
 
 proc reset(e: H264Encoder) =
   if e.enc != nil:
@@ -39,12 +32,14 @@ proc reset(e: H264Encoder) =
     WelsDestroySVCEncoder(e.enc)
     e.enc = nil
 
-proc h264EncoderCreate*(): H264Encoder =
-  result = create(H264EncoderObj)
+proc h264Encoder*(): H264Encoder =
+  result.new(cleanUp)
 
-proc h264EncoderInit*(h264enc: H264Encoder, width, height: int, fps: float) {.gcsafe.} =
+proc init*(h264enc: H264Encoder, width, height: int, fps: float) {.gcsafe.} =
   h264enc.reset()
-  h264enc.encoder.getDefaultParams(h264enc.param)
+  WelsCreateSVCEncoder(h264enc.enc)
+
+  h264enc.enc.getDefaultParams(h264enc.param)
   
   h264enc.param.iUsageType = CAMERA_VIDEO_REAL_TIME
   h264enc.param.iPicWidth = width.cint
@@ -112,7 +107,7 @@ proc h264EncoderInit*(h264enc: H264Encoder, width, height: int, fps: float) {.gc
   h264enc.pic.pData[3] = nil
 
 
-proc h264Encodei420*(h264enc: H264Encoder, i420_data: ptr UncheckedArray[uint8], i420_size: int, stream: Stream): bool {.gcsafe.} =
+proc encodei420*(h264enc: H264Encoder, i420_data: ptr UncheckedArray[uint8], i420_size: int, stream: Stream): bool {.gcsafe.} =
   h264enc.pic.pData[0] = i420_data[0].addr
   h264enc.pic.pData[1] = i420_data[i420_size * 2 div 3].addr
   h264enc.pic.pData[2] = i420_data[i420_size * 10 div 12].addr
@@ -135,7 +130,7 @@ proc h264Encodei420*(h264enc: H264Encoder, i420_data: ptr UncheckedArray[uint8],
     return false
 
 
-proc h264EncodeRGB*(h264enc: H264Encoder, rgb_data: pointer, stream: Stream): bool {.gcsafe.} =
+proc encodeRGB*(h264enc: H264Encoder, rgb_data: pointer, stream: Stream): bool {.gcsafe.} =
   var i420_size: uint
 
   if not turbojpeg.rgb2yuv(rgb_data, h264enc.width, h264enc.height, h264enc.i420_buffer, i420_size, TJSAMP_420, FAST_FLAGS):
@@ -162,7 +157,7 @@ proc h264EncodeRGB*(h264enc: H264Encoder, rgb_data: pointer, stream: Stream): bo
   else:
     return false
 
-proc h264EncodeJpeg*(h264enc: H264Encoder, jpeg_data: pointer, jpeg_size: uint, stream: Stream): bool {.gcsafe.} =
+proc encodeJpeg*(h264enc: H264Encoder, jpeg_data: pointer, jpeg_size: uint, stream: Stream): bool {.gcsafe.} =
   var 
     i420_size: uint
     success = turbojpeg.jpeg2i420(jpeg_data, jpeg_size, h264enc.i420_buffer, i420_size, h264enc.width, h264enc.height, FAST_FLAGS)

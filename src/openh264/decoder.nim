@@ -42,13 +42,13 @@ proc initFrames(d: H264Decoder) =
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~ High Level API ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-proc onDestroy*(d: H264Decoder) =
+proc onDestroy(d: H264Decoder) =
   if d.p_dec != nil:
     d.p_dec.WelsDestroyDecoder()
   if d.p_buffer != nil:
     d.p_buffer.dealloc()
 
-proc h264DecoderCreate*(): H264Decoder =
+proc h264Decoder*(): H264Decoder =
   result.new(onDestroy)
 
 proc frames*(d: H264Decoder): int =
@@ -61,7 +61,7 @@ proc atEnd*(d: H264Decoder): bool =
   result = d.p_currentFrame >= d.p_frames.len
 
 
-proc h264DecoderInit*(h264dec: H264Decoder, src_buffer: pointer | ptr UncheckedArray[uint8], src_buffer_size: uint) =
+proc init*(h264dec: H264Decoder, src_buffer: pointer | ptr UncheckedArray[uint8], src_buffer_size: uint) =
   h264dec.reset()
   WelsCreateDecoder(h264dec.p_dec)
 
@@ -73,7 +73,7 @@ proc h264DecoderInit*(h264dec: H264Decoder, src_buffer: pointer | ptr UncheckedA
   discard h264dec.p_dec.initialize(h264dec.p_sDecParam)
   h264dec.initFrames()
 
-proc h264DecodeI420*(h264dec: H264Decoder, i420_output: var array[3, ptr UncheckedArray[uint8]], width: var int, height: var int, stride: var array[3, cint]): bool =
+proc decodeI420*(h264dec: H264Decoder, i420_output: var array[3, ptr UncheckedArray[uint8]], width: var int, height: var int, stride: var array[3, cint]): bool =
   while true:
     if h264dec.p_currentFrame >= h264dec.p_frames.len:
       var iEndOfStreamFlag = true
@@ -115,19 +115,19 @@ proc h264DecodeI420*(h264dec: H264Decoder, i420_output: var array[3, ptr Uncheck
     else:
       break
 
-proc h264DecodeJpeg*(h264dec: H264Decoder, jpeg_output: var ptr UncheckedArray[uint8], jpeg_size: var uint, width, height: var int, jpegQual: TJQuality = 80): bool =
+proc decodeJpeg*(h264dec: H264Decoder, jpeg_output: var ptr UncheckedArray[uint8], jpeg_size: var uint, width, height: var int, jpegQual: TJQuality = 80): bool =
   var 
     i420_output: array[3, ptr UncheckedArray[uint8]]
     strides: array[3, cint]
-  if not h264dec.h264DecodeI420(i420_output, width, height, strides):
+  if not h264dec.decodeI420(i420_output, width, height, strides):
     return false
   return i4202jpeg(i420_output, width, height, jpeg_output, jpeg_size, jpegQual, strides)
 
-proc h264DecodeRGB*(h264dec: H264Decoder, rgb_output: var ptr UncheckedArray[uint8], width, height: var int): bool =
+proc decodeRGB*(h264dec: H264Decoder, rgb_output: var ptr UncheckedArray[uint8], width, height: var int): bool =
   var 
     i420_output: array[3, ptr UncheckedArray[uint8]]
     strides: array[3, cint]
     rgb_size: uint
-  if not h264dec.h264DecodeI420(i420_output, width, height, strides):
+  if not h264dec.decodeI420(i420_output, width, height, strides):
     return false
   return i4202rgb(i420_output, strides, width, height, rgb_output, rgb_size)
