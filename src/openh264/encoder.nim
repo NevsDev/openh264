@@ -124,7 +124,6 @@ proc encodei420*(h264enc: H264Encoder, i420_data: ptr UncheckedArray[uint8], i42
         iNalIdx -= 1
 
       stream.writeData(pLayerBsInfo.pBsBuf, iLayerSize)
-    h264enc.pic.uiTimeStamp += h264enc.timePerFrame
     return true
   else:
     return false
