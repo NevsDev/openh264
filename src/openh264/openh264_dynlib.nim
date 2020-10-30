@@ -18,9 +18,9 @@ when defined(Linux):
     const openh264* = "./libopenh264-2.1.1-linux64.6.so"
 elif defined(Windows):
   when defined(m64):
-    const openh264* = "openh264-2.1.1-win64.dll"
+    const openh264* = "openh264-2.1.1-win64"
   else:
-    const openh264 = "openh264-2.1.1-win32.dll"
+    const openh264 = "openh264-2.1.1-win32"
 elif defined(MacOsX):
   when defined(m64):
     const openh264* = "libopenh264-2.1.1-osx64.6.dylib"
