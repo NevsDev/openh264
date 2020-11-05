@@ -46,7 +46,7 @@ proc init*(h264enc: H264Encoder, width, height: int, fps: float) {.gcsafe.} =
   h264enc.param.iPicHeight = height.cint
   # h264enc.param.iTargetBitrate = 540000
   h264enc.param.iRCMode = RC_OFF_MODE
-  h264enc.param.fMaxFrameRate = fps
+  h264enc.param.fMaxFrameRate = fps.cfloat
   h264enc.param.iTemporalLayerNum = 3 ## temporal layer number, max temporal layer = 4
   h264enc.param.iSpatialLayerNum = 1 ## spatial layer number,1<= iSpatialLayerNum <= MAX_SPATIAL_LAYER_NUM, MAX_SPATIAL_LAYER_NUM = 4
   h264enc.param.iComplexityMode = LOW_COMPLEXITY
@@ -105,12 +105,14 @@ proc init*(h264enc: H264Encoder, width, height: int, fps: float) {.gcsafe.} =
   h264enc.pic.iStride[2] = width.cint div 2
   h264enc.pic.iStride[3] = 0
   h264enc.pic.pData[3] = nil
+  h264enc.pic.uiTimeStamp = 0
 
 
 proc encodei420*(h264enc: H264Encoder, i420_data: ptr UncheckedArray[uint8], i420_size: int, stream: Stream): bool {.gcsafe.} =
   h264enc.pic.pData[0] = i420_data[0].addr
   h264enc.pic.pData[1] = i420_data[i420_size * 2 div 3].addr
   h264enc.pic.pData[2] = i420_data[i420_size * 10 div 12].addr
+  h264enc.pic.uiTimeStamp += h264enc.timePerFrame
 
   if h264enc.enc.encodeFrame(h264enc.pic, h264enc.info) and h264enc.info.eFrameType != videoFrameTypeSkip: 
     for iLayer in 0..<h264enc.info.iLayerNum:
@@ -134,27 +136,8 @@ proc encodeRGB*(h264enc: H264Encoder, rgb_data: pointer, stream: Stream): bool {
 
   if not turbojpeg.rgb2yuv(rgb_data, h264enc.width, h264enc.height, h264enc.i420_buffer, i420_size, TJSAMP_420, FAST_FLAGS):
     return false
+  return h264enc.encodei420(h264enc.i420_buffer, i420_size.int, stream)
 
-  h264enc.pic.pData[0] = h264enc.i420_buffer[0].addr
-  h264enc.pic.pData[1] = h264enc.i420_buffer[i420_size * 2 div 3].addr
-  h264enc.pic.pData[2] = h264enc.i420_buffer[i420_size * 10 div 12].addr
-
-  if h264enc.enc.encodeFrame(h264enc.pic, h264enc.info) and h264enc.info.eFrameType != videoFrameTypeSkip: 
-    for iLayer in 0..<h264enc.info.iLayerNum:
-      var
-        pLayerBsInfo = h264enc.info.sLayerInfo[iLayer].addr
-        iLayerSize = 0
-        iNalIdx = pLayerBsInfo.iNalCount - 1
-      
-      doWhile iNalIdx >= 0:
-        iLayerSize += pLayerBsInfo.pNalLengthInByte[iNalIdx]
-        iNalIdx -= 1
-
-      stream.writeData(pLayerBsInfo.pBsBuf, iLayerSize)
-    h264enc.pic.uiTimeStamp += h264enc.timePerFrame
-    return true
-  else:
-    return false
 
 proc encodeJpeg*(h264enc: H264Encoder, jpeg_data: pointer, jpeg_size: uint, stream: Stream): bool {.gcsafe.} =
   var 
@@ -162,24 +145,4 @@ proc encodeJpeg*(h264enc: H264Encoder, jpeg_data: pointer, jpeg_size: uint, stre
     success = turbojpeg.jpeg2i420(jpeg_data, jpeg_size, h264enc.i420_buffer, i420_size, h264enc.width, h264enc.height, FAST_FLAGS)
   if not success:
     return false
-
-  h264enc.pic.pData[0] = h264enc.i420_buffer[0].addr
-  h264enc.pic.pData[1] = h264enc.i420_buffer[i420_size * 2 div 3].addr
-  h264enc.pic.pData[2] = h264enc.i420_buffer[i420_size * 10 div 12].addr
-
-  if h264enc.enc.encodeFrame(h264enc.pic, h264enc.info) and h264enc.info.eFrameType != videoFrameTypeSkip: 
-    for iLayer in 0..<h264enc.info.iLayerNum:
-      var
-        pLayerBsInfo = h264enc.info.sLayerInfo[iLayer].addr
-        iLayerSize = 0
-        iNalIdx = pLayerBsInfo.iNalCount - 1
-      
-      doWhile iNalIdx >= 0:
-        iLayerSize += pLayerBsInfo.pNalLengthInByte[iNalIdx]
-        iNalIdx -= 1
-
-      stream.writeData(pLayerBsInfo.pBsBuf, iLayerSize)
-    h264enc.pic.uiTimeStamp += h264enc.timePerFrame
-    return true
-  else:
-    return false
+  return h264enc.encodei420(h264enc.i420_buffer, i420_size.int, stream)

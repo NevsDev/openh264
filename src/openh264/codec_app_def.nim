@@ -32,7 +32,7 @@
 
 ## *
 ##  @file  codec_app_def.h
-##  @brief Data and /or structures introduced in Cisco OpenH264 application
+##  Data and /or structures introduced in Cisco OpenH264 application
 ##
 
 import codec_def
@@ -54,7 +54,7 @@ const
   UNSPECIFIED_BIT_RATE* = 0
 
 ## *
-##  @brief Struct of OpenH264 version
+##  Struct of OpenH264 version
 ##
 ## /
 ## / E.g. SDK version is 1.2.0.0, major version number is 1, minor version number is 2, and revision number is 0.
@@ -68,7 +68,7 @@ type
 
 
 ## *
-##  @brief Decoding status
+##  Decoding status
 ##
 
 type                          ## *
@@ -96,7 +96,7 @@ type                          ## *
 
 
 ## *
-##  @brief Option types introduced in SVC encoder application
+##  Option types introduced in SVC encoder application
 ##
 type
   ENCODER_OPTION* {.size: sizeof(cint).} = enum
@@ -127,7 +127,7 @@ type
 
 
 ## *
-##  @brief Option types introduced in decoder application
+##  Option types introduced in decoder application
 ##
 type
   DECODER_OPTION* {.size: sizeof(cint).} = enum
@@ -210,7 +210,7 @@ type
 
 
 ## *
-##  @brief Structure for LTR recover request
+##  Structure for LTR recover request
 ##
 type
   SLTRRecoverRequest* {.bycopy.} = object
@@ -222,7 +222,7 @@ type
 
 
 ## *
-##  @brief Structure for LTR marking feedback
+##  Structure for LTR marking feedback
 ##
 type
   SLTRMarkingFeedback* {.bycopy.} = object
@@ -233,7 +233,7 @@ type
 
 
 ## *
-##  @brief Structure for LTR configuration
+##  Structure for LTR configuration
 ##
 type
   SLTRConfig* {.bycopy.} = object
@@ -242,7 +242,7 @@ type
 
 
 ## *
-##  @brief Enumerate the type of rate control mode
+##  Enumerate the type of rate control mode
 ##
 type
   RC_MODES* {.size: sizeof(cint).} = enum
@@ -255,7 +255,7 @@ type
 
 
 ## *
-##  @brief Enumerate the type of profile id
+##  Enumerate the type of profile id
 ##
 type
   EProfileIdc* {.size: sizeof(cint).} = enum
@@ -265,7 +265,7 @@ type
 
 
 ## *
-##  @brief Enumerate the type of level id
+##  Enumerate the type of level id
 ##
 type
   ELevelIdc* {.size: sizeof(cint).} = enum
@@ -276,7 +276,7 @@ type
 
 
 ## *
-##  @brief Enumerate the type of wels log
+##  Enumerate the type of wels log
 ##
 const
   WELS_LOG_QUIET* = 0x00000000  ## quiet mode
@@ -290,7 +290,7 @@ const
   WELS_LOG_DEFAULT* = WELS_LOG_WARNING
 
 ## *
-##  @brief Enumerate the type of slice mode
+##  Enumerate the type of slice mode
 type
   SliceModeEnum* {.size: sizeof(cint).} = enum
     SM_SINGLE_SLICE = 0,        ## | SliceNum==1
@@ -300,7 +300,7 @@ type
     SM_RESERVED = 4
 
 
-##  @brief Structure for slice argument
+##  Structure for slice argument
 type
   SSliceArgument* {.bycopy.} = object
     uiSliceMode*: SliceModeEnum                     ## by default, uiSliceMode will be SM_SINGLE_SLICE
@@ -309,7 +309,7 @@ type
     uiSliceSizeConstraint*: cuint                   ## now only used when uiSliceMode=4
 
 
-##  @brief Enumerate the type of video format
+##  Enumerate the type of video format
 type
   EVideoFormatSPS* {.size: sizeof(cint).} = enum
     VF_COMPONENT, VF_PAL, VF_NTSC, VF_SECAM, VF_MAC, VF_UNDEF, VF_NUM_ENUM
@@ -317,7 +317,7 @@ type
 
 ##  EVideoFormat is already defined/used elsewhere!
 ## *
-##  @brief Enumerate the type of color primaries
+##  Enumerate the type of color primaries
 ##
 type
   EColorPrimaries* {.size: sizeof(cint).} = enum
@@ -326,7 +326,7 @@ type
 
 
 ## *
-##  @brief Enumerate the type of transfer characteristics
+##  Enumerate the type of transfer characteristics
 ##
 type
   ETransferCharacteristics* {.size: sizeof(cint).} = enum
@@ -337,7 +337,7 @@ type
 
 
 ## *
-##  @brief Enumerate the type of color matrix
+##  Enumerate the type of color matrix
 ##
 type
   EColorMatrix* {.size: sizeof(cint).} = enum
@@ -346,7 +346,7 @@ type
 
 
 ## *
-##  @brief Enumerate the type of sample aspect ratio
+##  Enumerate the type of sample aspect ratio
 ##
 type
   ESampleAspectRatio* {.size: sizeof(cint).} = enum
@@ -356,7 +356,7 @@ type
 
 
 ## *
-##  @brief  Structure for spatial layer configuration
+##   Structure for spatial layer configuration
 ##
 type
   SSpatialLayerConfig* {.bycopy.} = object
@@ -385,7 +385,7 @@ type
     sAspectRatioExtHeight*: cushort     ## use if aspect ratio idc == 255
 
 
-##  @brief Encoder usage type
+##  Encoder usage type
 type
   EUsageType* {.size: sizeof(cint).} = enum
     CAMERA_VIDEO_REAL_TIME,   ## camera video for real-time communication
@@ -394,7 +394,7 @@ type
     INPUT_CONTENT_TYPE_ALL
 
 
-##  @brief Enumulate the complexity mode
+##  Enumulate the complexity mode
 type
   ECOMPLEXITY_MODE* {.size: sizeof(cint).} = enum
     LOW_COMPLEXITY = 0,         ## the lowest compleixty,the fastest speed,
@@ -402,7 +402,7 @@ type
     HIGH_COMPLEXITY           ## high complexity, lowest speed, high quality
 
 
-##  @brief Enumulate for the stategy of SPS/PPS strategy
+##  Enumulate for the stategy of SPS/PPS strategy
 type
   EParameterSetStrategy* {.size: sizeof(cint).} = enum
     CONSTANT_ID = 0,            ## constant id in SPS/PPS
@@ -413,7 +413,7 @@ type
 
 ##  TODO:  Refine the parameters definition.
 ## *
-##  @brief SVC Encoding Parameters
+##  SVC Encoding Parameters
 type
   SEncParamBase* {.bycopy.} = object
     iUsageType*: EUsageType    ## application type; please refer to the definition of EUsageType
@@ -427,7 +427,7 @@ type
 
 
 
-##  @brief SVC Encoding Parameters extention
+##  SVC Encoding Parameters extention
 type
   SEncParamExt* {.bycopy.} = object
     iUsageType*: EUsageType
@@ -531,35 +531,35 @@ type
     uiTimeStamp*: clonglong           ## timestamp of the source picture, unit: millisecond
 
 
-##  @brief Structure for bit rate info
+##  Structure for bit rate info
 type
   SBitrateInfo* {.bycopy.} = object
     iLayer*: LAYER_NUM
     iBitrate*: cint            ## the maximum bitrate
 
 
-##  @brief Structure for dump layer info
+##  Structure for dump layer info
 type
   SDumpLayer* {.bycopy.} = object
     iLayer*: cint
     pFileName*: cstring
 
 
-##  @brief Structure for profile info in layer
+##  Structure for profile info in layer
 type
   SProfileInfo* {.bycopy.} = object
     iLayer*: cint
     uiProfileIdc*: EProfileIdc ## the profile info
 
 
-##  @brief  Structure for level info in layer
+##   Structure for level info in layer
 type
   SLevelInfo* {.bycopy.} = object
     iLayer*: cint
     uiLevelIdc*: ELevelIdc     ## the level info
 
 
-##  @brief Structure for dilivery status
+##  Structure for dilivery status
 type
   SDeliveryStatus* {.bycopy.} = object
     bDeliveryFlag*: bool       ## 0: the previous frame isn't delivered,1: the previous frame is delivered
@@ -567,7 +567,7 @@ type
     iDropFrameSize*: cint      ## the frame size that is dropped; reserved
 
 
-##  @brief The capability of decoder, for SDP negotiation
+##  The capability of decoder, for SDP negotiation
 type
   SDecoderCapability* {.bycopy.} = object
     iProfileIdc*: cint         ## profile_idc
@@ -581,7 +581,7 @@ type
     bRedPicCap*: bool          ## redundant-pic-cap
 
 
-##  @brief Structure for parse only output
+##  Structure for parse only output
 type
   SParserBsInfo* {.bycopy.} = object
     iNalNum*: cint                ## total NAL number in current AU
@@ -594,7 +594,7 @@ type
 
   PParserBsInfo* = ptr SParserBsInfo
 
-##  @brief Structure for encoder statistics
+##  Structure for encoder statistics
 type
   SEncoderStatistics* {.bycopy.} = object
     uiWidth*: cuint                   ## the width of encoded frame
@@ -618,7 +618,7 @@ type
     iLastStatisticsFrameCount*: culong
 
 
-##  @brief  Structure for decoder statistics
+##   Structure for decoder statistics
 type
   SDecoderStatistics* {.bycopy.} = object
     uiWidth*: cuint                       ## the width of encode/decode frame
@@ -652,7 +652,7 @@ type
 
 ##  in building, coming soon
 ## *
-##  @brief Structure for sample aspect ratio (SAR) info in VUI
+##  Structure for sample aspect ratio (SAR) info in VUI
 type
   SVuiSarInfo* {.bycopy.} = object
     uiSarWidth*: cuint              ## SAR width

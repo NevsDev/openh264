@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.4.1"
+version       = "0.4.2"
 author        = "Sven Keller"
 description   = "Openh264 codec bindings (compiletime autolink/no dependencies). Simple h264 codec highlevel api."
 license       = "MIT"
