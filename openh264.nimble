@@ -12,3 +12,9 @@ srcDir        = "src"
 requires "nim >= 1.0.0"
 requires "https://github.com/svekel/turbojpeg >= 0.8.3"
 
+
+task cross_compile_windows, "cross compilation":
+  # Ubuntu: apt install mingw-w64
+  # Use --cpu:i386 or --cpu:amd64 to switch the CPU architecture.
+  
+  exec "nim c -d:mingw examples/high_level_api_encoder.nim"
