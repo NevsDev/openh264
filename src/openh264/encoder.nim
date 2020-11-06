@@ -147,3 +147,38 @@ proc encodeJpeg*(h264enc: H264Encoder, jpeg_data: pointer, jpeg_size: uint, stre
   if not success:
     return false
   return h264enc.encodei420(h264enc.i420_buffer, i420_size.int, stream)
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+iterator encodei420*(h264enc: H264Encoder, i420_data: ptr UncheckedArray[uint8], i420_size: int): tuple[data: pointer, size: int] {.gcsafe.} =
+  h264enc.pic.pData[0] = i420_data[0].addr
+  h264enc.pic.pData[1] = i420_data[i420_size * 2 div 3].addr
+  h264enc.pic.pData[2] = i420_data[i420_size * 10 div 12].addr
+  h264enc.pic.uiTimeStamp += h264enc.timePerFrame
+
+  if h264enc.enc.encodeFrame(h264enc.pic, h264enc.info) and h264enc.info.eFrameType != videoFrameTypeSkip: 
+    var
+      iLayerSize = 0
+    for iLayer in 0..<h264enc.info.iLayerNum:
+      var
+        pLayerBsInfo = h264enc.info.sLayerInfo[iLayer].addr
+        iNalIdx = pLayerBsInfo.iNalCount - 1
+      
+      doWhile iNalIdx >= 0:
+        iLayerSize += pLayerBsInfo.pNalLengthInByte[iNalIdx]
+        iNalIdx -= 1
+      yield (data: pLayerBsInfo.pBsBuf, size: iLayerSize)
+
+
+iterator encodeRGB*(h264enc: H264Encoder, rgb_data: pointer): tuple[data: pointer, size: int] {.gcsafe.} =
+  var i420_size: uint
+  if turbojpeg.rgb2yuv(rgb_data, h264enc.width, h264enc.height, h264enc.i420_buffer, i420_size, TJSAMP_420, FAST_FLAGS):
+    for part in h264enc.encodei420(h264enc.i420_buffer, i420_size.int):
+      yield part
+
+
+iterator encodeJpeg*(h264enc: H264Encoder, jpeg_data: pointer, jpeg_size: uint): tuple[data: pointer, size: int] {.gcsafe.} =
+  var i420_size: uint
+  if turbojpeg.jpeg2i420(jpeg_data, jpeg_size, h264enc.i420_buffer, i420_size, h264enc.width, h264enc.height, FAST_FLAGS):
+    for part in h264enc.encodei420(h264enc.i420_buffer, i420_size.int):
+      yield part
