@@ -1,10 +1,11 @@
 import codec_def, codec_app_def, codec_api
 import turbojpeg
+import conet/shared_types
 
 type
   FramePosInfo = tuple[pos: uint32, endpos: uint32]
 
-  H264Decoder* = ref H264DecoderObj
+  H264Decoder* = ptr H264DecoderObj
   H264DecoderObj* = object
     p_dec: ptr ISVCDecoder
     p_sDecParam: SDecodingParam
@@ -12,7 +13,7 @@ type
     p_bufSize: uint
     p_buffer: ptr UncheckedArray[uint8]
     p_fps: float
-    p_frames: seq[FramePosInfo]  # Position of frames
+    p_frames: List[FramePosInfo]  # Position of frames
     p_currentFrame: int
 
 proc reset(d: H264Decoder) =
@@ -42,14 +43,15 @@ proc initFrames(d: H264Decoder) =
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~ High Level API ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-proc onDestroy(d: H264Decoder) =
+proc destroy*(d: var H264Decoder) =
   if d.p_dec != nil:
     d.p_dec.WelsDestroyDecoder()
   if d.p_buffer != nil:
     d.p_buffer.dealloc()
+  d.freeShared()
 
 proc h264Decoder*(): H264Decoder =
-  result.new(onDestroy)
+  result = createShared(H264DecoderObj)
 
 proc frames*(d: H264Decoder): int =
   result = d.p_frames.len

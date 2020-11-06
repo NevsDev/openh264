@@ -16,3 +16,4 @@ for i in 0'u8..<255'u8:
     echo &"frame: {i:3} is ready"
 
 outputFile.close()
+encoder.destroy()

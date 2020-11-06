@@ -17,3 +17,4 @@ if jpegFile2i420("rsc/lion.jpg", pictureData, i420_img_size, width, height):
       discard
 
 outputFile.close()
+encoder.destroy()

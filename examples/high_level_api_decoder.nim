@@ -30,3 +30,4 @@ while not decoder.atEnd():
   echo "Frame: ", counter
   counter.inc
 
+decoder.destroy()

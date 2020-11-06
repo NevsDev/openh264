@@ -7,7 +7,7 @@ template doWhile(cond, body) =
     body
 
 type 
-  H264Encoder* = ref H264EncoderObj
+  H264Encoder* = ptr H264EncoderObj
   H264EncoderObj* = object
     enc: ptr ISVCEncoder
     param: SEncParamExt
@@ -18,13 +18,14 @@ type
     height: int
     timePerFrame: clonglong
 
-proc cleanUp(e: H264Encoder) =
+proc destroy*(e: var H264Encoder) =
   if e.enc == nil:
     discard e.enc.uninitialize()
     WelsDestroySVCEncoder(e.enc)
     e.enc = nil
   if e.i420_buffer != nil:
     e.i420_buffer.dealloc()
+  e.freeShared()
 
 proc reset(e: H264Encoder) =
   if e.enc != nil:
@@ -33,7 +34,7 @@ proc reset(e: H264Encoder) =
     e.enc = nil
 
 proc h264Encoder*(): H264Encoder =
-  result.new(cleanUp)
+  result = createShared(H264EncoderObj)
 
 proc init*(h264enc: H264Encoder, width, height: int, fps: float) {.gcsafe.} =
   h264enc.reset()
