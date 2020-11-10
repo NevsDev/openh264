@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.4.5"
+version       = "0.4.6"
 author        = "Sven Keller"
 description   = "Openh264 codec bindings (compiletime autolink/no dependencies). Simple h264 codec highlevel api."
 license       = "MIT"
@@ -10,7 +10,7 @@ srcDir        = "src"
 # Dependencies
 
 requires "nim >= 1.0.0"
-requires "turbojpeg >= 0.8.5"
+requires "turbojpeg"
 requires "conet"
 
 task cross_compile_windows, "cross compilation":
