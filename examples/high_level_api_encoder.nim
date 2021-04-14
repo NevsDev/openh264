@@ -1,5 +1,5 @@
 import openh264, streams, strformat
-import cortona_image
+import coimg
 
 const
   width = 600

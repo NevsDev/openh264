@@ -1,6 +1,6 @@
 import codec_def, codec_app_def, codec_api
 import turbojpeg
-import conet/shared_types
+import coutils/shared_types
 
 type
   FramePosInfo = tuple[pos: uint32, endpos: uint32]
