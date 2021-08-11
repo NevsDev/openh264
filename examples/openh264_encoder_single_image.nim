@@ -1,3 +1,4 @@
+import os
 import openh264, streams, times
 import turbojpeg
 
@@ -104,7 +105,7 @@ pic.pData[1] = pictureData[i420_img_size * 2 div 3].addr
 pic.pData[2] = pictureData[i420_img_size * 10 div 12].addr
 pic.pData[3] = nil
 
-
+discard existsOrCreateDir("test_output")
 var fileStream = newFileStream("test_output/test.h264", fmWrite)
 
 for num in 0..<total_num:
